@@ -1,0 +1,165 @@
+//mini modulo by Kantimplora
+function kan() {
+
+}
+
+function trash(uno,dos) {
+
+}
+
+async function crater() {
+
+}
+  module.exports = {
+    kan: kan,
+    trash: trash,
+    crater: crater
+  }
+  //es un ejemplo de como lo uso
+  
+CRATER:
+Listo acabamos:
+Cosas pendientes, rep y likes del perfil.
+
+Kantimplora:
+Ok vamos a editar el README /   OYE CRATER una pregunta como hacen para definir user en los ejs? / me muestran donde lo pusieron?
+                                                                                                            
+Crater: desde las rutas debes agregar los parametros a mostrar como objetos;                                  
+                                                                                                              
+Trash: no estaria mal hacer un mapeo de los servidores que esta el usuario de dueño o manager :f:             
+                                                                                                              
+Crater: Si, vamos paso a paso primero estamos en Perfil :piensa :estemen 
+
+Crater: voy me voy vuelvo luego, creo que debo crear un chat aqui ok no.. pa eso esta discord :good stemen:
+
+aca no andan los emojis :( K: vamo a discord buen trabajo todos
+
+
+
+
+
+
+
+
+
+
+
+ <!-- Servidores del usuario | DavichoStar | Muestra: https://i.imgur.com/jyAyuJQ.png -->
+            <p>
+              Servidores que Administras
+            </p>
+            <% let countAdmin = 0; 
+               for (let i = 0; i < user.guilds.length; i++) {  //Un ciclo for, ya que los guilds estan en un array
+               if (client.guilds.get(user.guilds[i].id) && (client.guilds.get(user.guilds[i].id)).members.get(user.id).hasPermissions("ADMINISTRATOR", "MANAGE_GUILD")) { %>
+                <% countAdmin++; %>
+                <ul class="collection">
+                  <li class="collection-item avatar">
+                  <% if (user.guilds[i].icon == null) { %>
+                    <img src="https://cdn0.iconfinder.com/data/icons/free-social-media-set/24/discord-512.png" alt="" class="circle">
+                  <% } else { %>
+                    <img src="<%= `https://cdn.discordapp.com/icons/${user.guilds[i].id}/${user.guilds[i].icon}.png`%>" alt="" class="circle">
+                  <% } %>
+                  <span class="title"><%= `${user.guilds[i].name}`%></span>
+                  <p>
+                    <%= `${client.guilds.get(user.guilds[i].id).memberCount}`%> miembros
+                  </p>
+                  </li>
+                </ul>
+                <% } 
+               } %>
+            <% if (countAdmin == 0) { %> <!-- Si no hay servidores que mostrar entramos aquí -->
+              <ul class="collection">
+                <li class="collection-item avatar">
+                <img src="https://cdn0.iconfinder.com/data/icons/free-social-media-set/24/discord-512.png" alt="" class="circle">
+                <span class="title">Ninguno</span>
+                <p>
+                  No Hay Servidores que Mostrar
+                </p>
+                </li>
+              </ul>
+            <% } %> 
+            <!-- Servidores en Común -->
+            <p>
+                Servidores que Compartes con el Bot.
+            </p>
+            <% let countComun = 0; %>
+            <% for (let i = 0; i < user.guilds.length; i++) { %>
+              <% if (client.guilds.get(user.guilds[i].id) && !(client.guilds.get(user.guilds[i].id)).members.get(user.id).hasPermissions("ADMINISTRATOR", "MANAGE_GUILD")) { %>
+                <% countComun++; %>
+                <ul class="collection">
+                  <li class="collection-item avatar">
+                  <% if (user.guilds[i].icon == null) { %>
+                    <img src="https://cdn0.iconfinder.com/data/icons/free-social-media-set/24/discord-512.png" alt="" class="circle">
+                  <% } else { %>
+                    <img src="<%= `https://cdn.discordapp.com/icons/${user.guilds[i].id}/${user.guilds[i].icon}.png`%>" alt="" class="circle">
+                  <% } %>
+                  <span class="title"><%= `${user.guilds[i].name}`%></span>
+                  <p>
+                    <%= `${client.guilds.get(user.guilds[i].id).memberCount}`%> miembros
+                  </p>
+                  </li>
+                </ul>
+              <% } %>
+            <% } %>
+            <% if (countComun == 0) { %>  <!-- Si no hay servidores que mostrar entramos aquí -->
+              <ul class="collection">
+                <li class="collection-item avatar">
+                <img src="https://cdn0.iconfinder.com/data/icons/free-social-media-set/24/discord-512.png" alt="" class="circle">
+                <span class="title">Ninguno</span>
+                <p>
+                  No Hay Servidores que Mostrar
+                </p>
+                </li>
+              </ul>
+            <% } %>
+            <!-- Fin de los servidores | DS-->       
+            
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+           
+            <div id="send-msg" class="col s12">
+              <p>
+                Enviar Mensajes con ID de canal
+              </p>
+              <form id="send-msg">
+                Color <input class="jscolor" name="color"><br>
+                Título  <input name="titulo"><br>
+                Descripción <input name="msg"><br>
+                ID Canal  <input name="canal"><br>
+                <input class="btn btn-success" type="submit">
+              </form>
+                    <script>
+        $(document).ready(function() {
+    $('#send-msg').submit(function(e) {
+        e.preventDefault();
+        $.ajax({
+            type: "POST", //Esta URL no existe por eso no manda
+            url: "https://mydash.glitch.me/api/send-msg",
+            data: $(this).serialize(),
+            success: function(resp) {
+                if (resp.status === "sent") {
+                    alert("Mensaje enviado correctamente")
+                } else if (resp.status === "error") {
+                    alert(`Error al enviar el mensaje: ${resp.error}`)
+                }
+            }
+        });
+    });
+
+});
+      </script>
+            </div>
