@@ -19,6 +19,12 @@ router.get('/:id', CheckAuth, async(req, res) => {
   
  
   await base.run('CREATE TABLE IF NOT EXISTS server (idserver TEXT, status INTEGER)')
+  await base.run('CREATE TABLE IF NOT EXISTS serverPrefix (idserver TEXT, prefix TEXT, status INTEGER)')
+  await base.run('CREATE TABLE IF NOT EXISTS serverWord (idserver TEXT, words TEXT, status INTEGER)')
+  await base.run('CREATE TABLE IF NOT EXISTS serverRolAuto (idserver TEXT, idrole TEXT, status INTEGER)')
+  
+  await base.run('CREATE TABLE IF NOT EXISTS serverWelcome (idserver TEXT, idchannel TEXT, msg TEXT, status INTEGER)')
+  await base.run('CREATE TABLE IF NOT EXISTS serverLeave (idserver TEXT, idchannel TEXT, msg TEXT, status INTEGER)')
   await base.run('CREATE TABLE IF NOT EXISTS serverActivity (idserver TEXT, idchannel TEXT, datetime INTEGER, day INTEGER, month INTEGER)')
   const ServerDatos =
   new Promise((resolve, reject) => {
@@ -37,7 +43,141 @@ router.get('/:id', CheckAuth, async(req, res) => {
      
     });
   });
-
+  
+  const ServerWords =
+  new Promise((resolve, reject) => {
+    base.get("SELECT * FROM serverWord WHERE idserver = ?", idserver, async (err, filaWord) => {
+      if (err) {
+        return reject(err);
+      }
+      
+      if(filaWord){
+        resolve(filaWord)
+      } else {
+        resolve(false)
+      }
+     
+    });
+  });
+  
+  
+  let datoWord = await ServerWords.then(datos => {
+    if(datos) {
+      return datos;
+    } else {
+      return false;
+    }
+  })
+  
+  
+  const ServerRoles =
+        new Promise((resolve, reject) => {
+    base.get("SELECT * FROM serverRolAuto WHERE idserver = ?", idserver, async (err, filaRoles) => {
+      if (err) {
+        return reject(err);
+      }
+      
+      if(filaRoles){
+        resolve(filaRoles)
+      } else {
+        resolve(false)
+      }
+     
+    });
+  });
+  
+  
+  let datoRol = await ServerRoles.then(dato => {
+    if(dato) {
+      return dato
+    } else {
+      return false;
+    }
+  })
+  
+  const serverWelcome = 
+        new Promise((resolve, reject) => {
+          base.get("SELECT * FROM serverWelcome WHERE idserver = ?", idserver , async (err, filas) => {
+            if(err) {
+              return reject(err);
+            }
+            
+            if(filas){
+              resolve(filas)
+            } else {
+              resolve(false)
+            }
+            
+          })
+        })
+  
+  let datoWelcome = await serverWelcome.then(dato => {
+      if(dato){
+        return dato;
+      } else {
+        return false;
+      }
+      
+    
+    
+  })
+  
+  const serverLeave = 
+        new Promise((resolve, reject) => {
+          base.get("SELECT * FROM serverLeave WHERE idserver = ?", idserver , async (err, filas) => {
+            if(err) {
+              return reject(err);
+            }
+            
+            if(filas){
+              resolve(filas)
+            } else {
+              resolve(false)
+            }
+            
+          })
+        })
+  
+  let datoLeave = await serverLeave.then(dato => {
+      if(dato){
+        return dato;
+      } else {
+        return false;
+      }
+      
+    
+    
+  })
+  const serverPrefix = 
+        new Promise((resolve, reject) => {
+          base.get("SELECT * FROM serverPrefix WHERE idserver = ?", idserver, async (err, datos) => {
+            if(err) {
+              return reject(err);
+            }
+              
+            let prefix;
+              if(!datos){
+                let sentencia = base.prepare("INSERT INTO serverPrefix VALUES (?, ?, ?)");
+                sentencia.run(idserver, '!', 0);
+                prefix = '!';
+                
+              } else {
+               
+                prefix = datos.prefix;
+              }
+              
+            return resolve(prefix);
+          })
+        })
+  
+  let datoPrefix = await serverPrefix.then(datosPrefix => {
+    
+    return datosPrefix
+  })
+  
+  
+  
+  
   const ServerActivity =
   new Promise((resolve, reject) => {
     base.all("SELECT * FROM serverActivity WHERE idserver = ? ", [idserver], function (err, rows) {
@@ -178,15 +318,24 @@ router.get('/:id', CheckAuth, async(req, res) => {
  
   console.log(channelsCount)
   console.log(channelsDate)
+  
+  
   res.render("server.ejs", {
       guild: datoServer, 
       status: (req.isAuthenticated() ? `${req.user.username}#${req.user.discriminator}` : "login"),
       client: req.bot,
       bans: baneados,
       datoActivity: activity,
+      datoWelcome_msg: datoWelcome ? datoWelcome.msg : "Escriba un mensaje de bienvenida.",
+      datoWelcome_channel: datoWelcome ? datoWelcome.idchannel : "Seleccione un canal.",
+      datoLeave_msg: datoLeave ? datoLeave.msg : "Escriba un mensaje de salida.",
+      datoLeave_channel: datoLeave ? datoLeave.idchannel : "Seleccione un canal.",
+      datoRoleAuto: datoRol ? datoRol.idrole : "Seleccione un rol.",
+      datosWords: datoWord ? datoWord.words : "Sin palabras.",
       datoChannels: channelsDate,
       countActivity: activityCount,
       countChannel: channelsCount,
+      prefix: datoPrefix,
       date: dateDay,
       user: req.user,
       login: (req.isAuthenticated() ? "si" : "no"),
@@ -207,5 +356,118 @@ router.get('/:id', CheckAuth, async(req, res) => {
   
   
 })
+.post('/:id/prefix', CheckAuth, async(req, res) => {
+      
+    let base = req.db;
+    let idserver = req.params.id;
+    let newPrefix = req.body.newPrefix;
+    
+    base.get("SELECT * FROM serverPrefix WHERE idserver = ?", idserver, function (err, filas) {
+      if(!filas) return;
+      base.run(`UPDATE serverPrefix SET prefix = '${newPrefix}' WHERE idserver = ${idserver}`);
+      res.redirect(`/server/${idserver}`);
+      
+    });
+    
+})
+.post('/:id/wordsban', CheckAuth, async(req, res) => {
+      
+    let base = req.db;
+    let idserver = req.params.id;
+    let words = req.body.words;
+    
+    base.get("SELECT * FROM serverWord WHERE idserver = ?", idserver, function (err, filas) {
+     if(!filas) {
+        
+        let sentencia = base.prepare("INSERT INTO serverWord VALUES (?, ?, ?)");
+        sentencia.run(idserver, words, 0);
+        res.redirect(`/server/${idserver}`);
+         console.log('NEW PALABRAS: '+words)
+      } else {
+         if(words === '') words = filas.words;
+         base.run(`UPDATE serverWord SET words = '${words}' WHERE idserver = '${idserver}'`);
+         res.redirect(`/server/${idserver}`); 
+         console.log('NEW PALABRAS: '+filas.words)
+      }
+      
+    });
+    
+    
+    
+})
+.post('/:id/welcome', CheckAuth, async(req, res) => {
+      
+    let base = req.db;
+    let idserver = req.params.id;
+    let msg_welcome = req.body.msg_Welcome;
+    let id_channel = req.body.channel_ID;
+    
+    console.log('ID CHANNEL: '+ id_channel)
+    base.get("SELECT * FROM serverWelcome WHERE idserver = ?", idserver, function (err, filas) {
+      if(!filas) {
+        
+        let sentencia = base.prepare("INSERT INTO serverWelcome VALUES (?, ?, ?, ?)");
+        sentencia.run(idserver, id_channel, msg_welcome, 0);
+        res.redirect(`/server/${idserver}`);
+      } else {
+       if(msg_welcome === '') msg_welcome = filas.msg;
+       if(!id_channel) id_channel = filas.idchannel
+       base.run(`UPDATE serverWelcome SET idchannel = '${id_channel}', msg = '${msg_welcome}' WHERE idserver = '${idserver}'`);
+       res.redirect(`/server/${idserver}`); 
+      }
 
+      
+    });
+    
+})
+.post('/:id/leave', CheckAuth, async(req, res) => {
+      
+    let base = req.db;
+    let idserver = req.params.id;
+    let msg_leave = req.body.msg_Leave;
+    let id_channel = req.body.channel_ID;
+    
+    console.log('ID CHANNEL: '+ id_channel)
+    base.get("SELECT * FROM serverLeave WHERE idserver = ?", idserver, function (err, filas) {
+      if(!filas) {
+        
+        let sentencia = base.prepare("INSERT INTO serverLeave VALUES (?, ?, ?, ?)");
+        sentencia.run(idserver, id_channel, msg_leave, 0);
+        res.redirect(`/server/${idserver}`);
+      } else {
+       if(msg_leave === '') msg_leave = filas.msg;
+       if(!id_channel) id_channel = filas.idchannel
+       base.run(`UPDATE serverLeave SET idchannel = '${id_channel}', msg = '${msg_leave}' WHERE idserver = '${idserver}'`);
+       res.redirect(`/server/${idserver}`); 
+      }
+
+      
+    });
+    
+})
+.post('/:id/rolauto', CheckAuth, async(req, res) => {
+      
+    let base = req.db;
+    let idserver = req.params.id;
+    let id_role = req.body.rol_ID;
+    
+    
+    base.get("SELECT * FROM serverRolAuto WHERE idserver = ?", idserver, function (err, filas) {
+      if(!filas) {
+        
+        let sentencia = base.prepare("INSERT INTO serverRolAuto VALUES (?, ?, ?)");
+        sentencia.run(idserver, id_role, 0);
+        
+        res.redirect(`/server/${idserver}`);
+      } else {
+      
+       if(!id_role) id_role = filas.idrole
+       base.run(`UPDATE serverRolAuto SET idrole = '${id_role}' WHERE idserver = '${idserver}'`);
+       res.redirect(`/server/${idserver}`); 
+      }
+
+      
+    });
+    
+})
 module.exports = router;

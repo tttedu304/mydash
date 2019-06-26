@@ -175,9 +175,158 @@
                               });
               </script>
             </div>
+            
           </div>
         </div>
-        <hr>
+        
+        <div class="body-server-tabs">
+          <h2>
+            Configuraciones:
+          </h2>
+           <div class="row">
+            <div class="col s12">
+              <ul class="tabs">
+                <li class="tab col s3"><a class="active" href="#test1">Prefix</a></li>
+                <li class="tab col s3"><a href="#test2">Bienvenida y Salida</a></li>
+                <li class="tab col s3"><a href="#test3">Rol Autosignable</a></li>
+                <li class="tab col s3"><a href="#test4">Censurar palabras</a></li>
+              </ul>
+            </div>
+            <div id="test1" class="col s12">
+              <h2>
+                Prefix de servidor:
+              </h2>
+              <form class="col s12" method="POST" action="/server/<%=guild.id%>/prefix">
+                  <div class="row">
+                    <div class="input-field col s12">
+                      <i class="material-icons prefix">info_outline</i>
+                        <input id="icon_prefix" type="text" name="newPrefix" class="validate">
+                      <label for="icon_prefix"><%= prefix %> </label>
+                    </div>
+                     <div class="right pd-2">
+                       <button class="btn waves-effect bg-btn" type="submit" name="action">Guardar
+                          <i class="material-icons right">done</i>
+                      </button>
+                   </div>
+                   </div>
+              </form> 
+            </div>
+            <div id="test2" class="col s12">
+            <h2>
+              Mensaje y selección de bienvenida:
+            </h2>
+             <form class="col s12" method="post" id="enviar_Welcome" action="/server/<%=guild.id%>/welcome">
+                <div class="row">
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">account_circle</i>
+                    <select id="select-channel" name="channel_ID"> 
+                      <%= login === 'si' ? '/perfil' : '/login' %>"
+                      <option value="no_select" disabled selected># <%= datoWelcome_channel === 'Seleccione un canal.' ? datoWelcome_channel : client.guilds.get(guild.id).channels.get(datoWelcome_channel).name %></option> 
+                      <% guild.channels.filter(ch => ch.type === 'text').filter(p => p.permissionsFor(client.user).has('SEND_MESSAGES') && p.permissionsFor(client.user).has('READ_MESSAGES')).map(lc => {%>
+                      <option value="<%=lc.id %>">#<%=lc.name%></option>
+                      <%   
+                      });
+                      %>
+                    </select>
+                  
+                  </div>
+
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">chat</i>
+                    <input id="icon_prefix" placeholder="<%= datoWelcome_msg %>" type="text" name="msg_Welcome" id="msg_input" class="validate">
+                    
+                  </div>
+                  <div class="input-field col s12">
+                    <button class="btn waves-effect waves-light" type="submit" id="btn_Enviar" name="action">Guardar
+                      <i class="material-icons right">done</i>
+                    </button>
+                  </div>
+                </div>
+              </form>
+              <h2>
+               Mensaje y selección de salida:
+              </h2>
+              <form class="col s12" method="post" id="enviar_Leave" action="/server/<%=guild.id%>/leave">
+                <div class="row">
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">account_circle</i>
+                    <select id="select-channel" name="channel_ID"> 
+                      <option value="no_select" disabled selected>#<%= datoLeave_channel === 'Seleccione un canal.' ? datoLeave_channel : client.guilds.get(guild.id).channels.get(datoLeave_channel).name %></option> 
+                       
+                      <% guild.channels.filter(ch => ch.type === 'text').filter(p => p.permissionsFor(client.user).has('SEND_MESSAGES') && p.permissionsFor(client.user).has('READ_MESSAGES')).map(lc => {%>
+                      <option value="<%=lc.id %>">#<%=lc.name%></option>
+                      <%   
+                      });
+                      %>
+                    </select>
+                  
+                  </div>
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">chat</i>
+                    <input id="icon_prefix" placeholder="<%= datoLeave_msg %>" type="text" name="msg_Leave" id="msg_input" class="validate">
+                    
+                  </div>
+                  <div class="input-field col s12">
+                    <button class="btn waves-effect waves-light" type="submit" id="btn_Enviar" name="action">Guardar
+                      <i class="material-icons right">done</i>
+                    </button>
+                  </div>
+                </div>
+              </form>
+              
+            </div>
+            <div id="test3" class="col s12">
+              <h2>
+               Selección de un rol autoasignable para los nuevos usuarios:
+              </h2>
+              <form class="col s12" method="post" id="add_role" action="/server/<%=guild.id%>/rolauto">
+                <div class="row">
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">account_circle</i>
+                    <select id="select-channel" name="rol_ID"> 
+                      <option value="no_select" disabled selected><%= datoRoleAuto === 'Seleccione un rol.' ? datoRoleAuto : client.guilds.get(guild.id).roles.get(datoRoleAuto).name %></option> 
+                       
+                      <% guild.roles.map(r => {%>
+                      <option value="<%=r.id %>"><%=r.name%></option>
+                      <%   
+                      });
+                      %>
+                    </select>
+                  
+                  </div>
+              
+                  <div class="input-field col s12">
+                    <button class="btn waves-effect waves-light" type="submit" id="btn_Guardar" name="action">Guardar
+                      <i class="material-icons right">done</i>
+                    </button>
+                  </div>
+                </div>
+              </form>
+               
+            </div>
+            <div id="test4" class="col s12">
+               <h2>
+                Escribe las palabras a censurar o bloquear en <%=guild.name%>:
+              </h2>
+              <form class="col s12" method="POST" action="/server/<%=guild.id%>/wordsban">
+                  <div class="row">
+                    <div class="input-field col s12">
+                      <i class="material-icons prefix">info_outline</i>
+                        <input id="icon_prefix" type="text" name="words" class="validate">
+                      <label for="icon_prefix"><%= datosWords %> </label>
+                    </div>
+                     <div class="right pd-2">
+                       <button class="btn waves-effect bg-btn" type="submit" name="action">Guardar
+                          <i class="material-icons right">done</i>
+                      </button>
+                   </div>
+                   </div>
+              </form> 
+               
+            </div>
+          </div>
+
+        </div>
         <div class="body-server-info">
           <div class="row">
             <div class="col s6">
