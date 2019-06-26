@@ -76,6 +76,9 @@ margin-bottom: 0;
 .bg-btn-discord:hover {
   background: linear-gradient(to bottom,#7289DA 0%, #7289DA 100%);
 }
+input {
+  color: #ffffff;
+}
 footer {
   color: #ffffff;
 }
@@ -173,7 +176,7 @@ footer {
 .body-banner-name {
   padding-top: 70px;
   margin-left: -25px;
-}
+} 
 .banner-name-server{
   font-size: 25px;
   background-color: #2C2F33;

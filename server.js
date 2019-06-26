@@ -36,9 +36,156 @@ client.on('ready', () => {
 
 });
 
-let prefix = process.env.PREFIX;
+//let prefix = process.env.PREFIX;
 
-client.on('message', message => {
+client.on('guildMemberAdd', async (member) => {
+  console.log('SE ACTIVO');
+  let idserver = member.guild.id;
+  
+   const serverWelcome = 
+        new Promise((resolve, reject) => {
+          base.get("SELECT * FROM serverWelcome WHERE idserver = ?", idserver , async (err, filas) => {
+            if(err) {
+              return reject(err);
+            }
+            
+            if(filas){
+              resolve(filas)
+            } else {
+              resolve(false)
+            }
+            
+          })
+        })
+  
+   
+  let datoWelcome = await serverWelcome.then(dato => {
+      if(dato){
+        return dato;
+        
+      } else {
+        return false;
+        
+      }
+      
+    
+    
+  })
+    const ServerRoles =
+        new Promise((resolve, reject) => {
+    base.get("SELECT * FROM serverRolAuto WHERE idserver = ?", idserver, async (err, filaRoles) => {
+      if (err) {
+        return reject(err);
+      }
+      
+      if(filaRoles){
+        resolve(filaRoles)
+      } else {
+        resolve(false)
+      }
+     
+    });
+  });
+  
+  
+  let datoRol = await ServerRoles.then(dato => {
+    if(dato) {
+      return dato
+    } else {
+      return false;
+    }
+  })
+  
+  if(datoRol){
+    //TAREA
+    console.log('NUEVO USUARIO, ROL AUTOASIGNABLE.')
+    console.log(datoRol)
+    
+    member.addRole(datoRol.idrole)
+    
+  }
+  if(datoWelcome){
+    
+  //TAREA
+  console.log(datoWelcome);
+  
+//  let test = member.guild.channels.find(c => c.name === 'test').id;
+  let objeParametros = {
+    "%MENTION%":"<@"+member.user.id+">",
+    "%SERVER%": "**"+member.guild.name+"**",
+    "%TAG%": "**"+member.user.tag+"**",
+    "%COUNT%": "__**"+member.guild.memberCount+"**__"
+    //"%CHANNEL%": '<#'+test+'>'
+  }
+  
+  
+  
+  let msgConvert = datoWelcome.msg.replace(/%MENTION%|%SERVER%|%TAG%|%COUNT%/gi, function(msgre){
+    return objeParametros[msgre];
+  })
+  client.guilds.get(datoWelcome.idserver).channels.get(datoWelcome.idchannel).send(msgConvert)
+  }
+  
+  
+  
+  
+})
+client.on('guildMemberRemove', async (member) => {
+  
+  let idserver = member.guild.id;
+  
+   const serverLeave = 
+        new Promise((resolve, reject) => {
+          base.get("SELECT * FROM serverLeave WHERE idserver = ?", idserver , async (err, filas) => {
+            if(err) {
+              return reject(err);
+            }
+            
+            if(filas){
+              resolve(filas)
+            } else {
+              resolve(false)
+            }
+            
+          })
+        })
+  
+  let datoLeave = await serverLeave.then(dato => {
+      if(dato){
+        return dato;
+        
+      } else {
+        return false;
+        
+      }
+      
+    
+    
+  })
+  if(!datoLeave) return console.log('NO HAY REGISTRO DE DATOS DE SALIDA');
+  
+
+  let datosMsg = datoLeave.msg.split("<")[1]
+  console.log('RESULTADO SPLIT: '+datosMsg)
+  let objeParametros = {
+    "%MENTION%":"<@"+member.user.id+">",
+    "%SERVER%": "**"+member.guild.name+"**",
+    "%TAG%": "**"+member.user.tag+"**",
+    "%COUNT%": "__**"+member.guild.memberCount+"**__"   
+  }
+  
+  
+  let msgConvert = datoLeave.msg.replace(/%MENTION%|%SERVER%|%TAG%|%COUNT%/gi, function(msgre){
+    return objeParametros[msgre];
+  })
+  
+  client.guilds.get(datoLeave.idserver).channels.get(datoLeave.idchannel).send(msgConvert)
+  
+})
+
+
+client.on('message', async message => {
+  
   
   let enviar = {
     local: function (text){
@@ -56,11 +203,57 @@ client.on('message', message => {
     }
   }
   
-  if(message.author.bot) return;
   if(message.channel.type == "dm") return;
+  
   let idusuario = message.author.id;
   let idserver = message.guild.id;
   let idchannel = message.channel.id;
+  
+  const serverWord = 
+        new Promise((resolve, reject) => {
+          base.get("SELECT * FROM serverWord WHERE idserver = ?", idserver , async (err, filas) => {
+            if(err) {
+              return reject(err);
+            }
+            
+            if(filas){
+              resolve(filas)
+            } else {
+              resolve(false)
+            }
+            
+          })
+        })
+  
+await serverWord.then( async (dato) =>  {
+      if(dato){
+        
+        let palabras = dato.words;
+        let palabrasArrays = palabras.split(" ");
+        
+        
+        if(palabrasArrays.some(p => message.content.toLowerCase().split(' ').includes(p.toLowerCase()))){
+          //TAREA
+           await message.delete();
+           await message.reply('No se permiten ese tipo de palabras.')
+           
+           await message.author.send('Enviaste una palabra que no esta permitidad dentro del servidor.')
+          
+           //muterole
+           //warn
+          
+           //kick
+           //ban
+        }
+        
+      }
+  })
+    
+  if(message.author.bot) return;
+  
+  
+  
+  
   base.run('CREATE TABLE IF NOT EXISTS serverActivity (idserver TEXT, idchannel TEXT, datetime INTEGER, day INTEGER, month INTEGER)', activity)
   function activity (){
     base.run('CREATE TABLE IF NOT EXISTS server (idserver TEXT, status TEXT)')
@@ -76,9 +269,40 @@ client.on('message', message => {
       }
     })
   }
+  
+  
+  let PrefixDato = 
+      new Promise((resolve, reject) => {
+        base.get("SELECT * FROM serverPrefix WHERE idserver = ?", idserver, function (err, filas) {
+          if(err) {
+              return reject(err);
+            }
+              
+              let prefix;
+              if(!filas){
+              
+                prefix = '!';
+                
+              } else {
+               
+                prefix = filas.prefix;
+              }
+              
+            return resolve(prefix);
+          
+        })
+        
+    })
+  
+  let prefix = await PrefixDato.then(p => {
+    return p;
+  })
+  
+  enviar.log('EL PREFIX ES: '+ prefix)
+  
   if(!message.content.startsWith(prefix)) return;
-   
 
+  
   
   const args = message.content.slice(prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
@@ -291,3 +515,4 @@ process.on("unhandledRejection", (r) => {
   console.dir(r);
 });
 
+//COPY PASTE ES MALO :/ - @ EXECUTE ORDER 66 🔺#2511
